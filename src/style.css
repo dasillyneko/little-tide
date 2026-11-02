@@ -77,3 +77,84 @@ body.light-mode{color-scheme:light;--bg:#eaf0f2;--panel:#f8faf9;--line:#d2dade;-
 .light-mode .error{color:#9e4d39!important}
 
 .light-mode .range-label output,.light-mode #textSaveStatus,.light-mode #brandingStatus{color:#826037}
+
+/* Readable controls for a live streamer, with the pond kept separate. */
+:root{--sans:"Segoe UI",Arial,Helvetica,sans-serif}
+.studio{grid-template-columns:minmax(0,1fr) 420px}
+.control-room{font:15px/1.55 "Segoe UI",Arial,sans-serif}
+.control-room .panel-head{padding:26px 24px 20px}
+.control-room .panel-head h1{font:600 28px "Segoe UI",Arial,sans-serif}
+.control-room .panel-head p{font-size:14px;line-height:1.5}
+.control-room .micro{font:600 11px "Segoe UI",Arial,sans-serif;letter-spacing:1.2px}
+.control-room .tabs{padding:0 20px;gap:16px;justify-content:space-between}
+.control-room .tabs button{font:500 14px "Segoe UI",Arial,sans-serif;padding:17px 0}
+.control-room .tabs span{font-size:12px}
+.control-room .panel-scroll{padding:0 24px}
+.control-room .section-heading{margin-bottom:16px;align-items:center}
+.control-room .section-heading h2,.control-room .upload-section h2{font:600 19px "Segoe UI",Arial,sans-serif;letter-spacing:-.3px}
+.control-room .section-heading>span{font:600 10px "Segoe UI",Arial,sans-serif;letter-spacing:.6px}
+.control-room .connection-card p,.control-room .control-section p,.control-room .pane-intro p{font:14px/1.65 "Segoe UI",Arial,sans-serif}
+.control-room .pane-intro h2{font:600 24px "Segoe UI",Arial,sans-serif;letter-spacing:-.5px}
+.control-room .connection-card label,.control-room .paired label,.control-room .field-label{font:500 12px "Segoe UI",Arial,sans-serif;letter-spacing:.2px}
+.control-room .field-label{margin-top:20px}
+.control-room input:not([type=checkbox]):not([type=range]):not([type=color]):not([type=file]),.control-room select,.control-room textarea{font:14px/1.4 "Segoe UI",Arial,sans-serif;padding:11px;border-radius:6px}
+.control-room .url-field input{font-size:13px!important}
+.control-room .row-label{font:500 14px "Segoe UI",Arial,sans-serif;gap:16px}
+.control-room .row-label select{width:158px;font-size:13px}
+.control-room .row-label input[type=number]{width:82px}
+.control-room .primary,.control-room .secondary{font:600 14px "Segoe UI",Arial,sans-serif;padding:13px;border-radius:6px}
+.control-room .small-button,.control-room .text-button{font:500 13px "Segoe UI",Arial,sans-serif}
+.control-room .setup-help{font-size:13px}
+.control-room .fine{font-size:12px!important;line-height:1.6}
+.control-room .range-label{font:500 14px "Segoe UI",Arial,sans-serif}
+.control-room .range-label output{font:600 13px "Segoe UI",Arial,sans-serif}
+.control-room .range-captions{font:12px "Segoe UI",Arial,sans-serif}
+.control-room .paired{gap:16px;margin-top:20px}
+.control-room .style-toggles label,.control-room .auto-color{font:13px "Segoe UI",Arial,sans-serif!important}
+.control-room .style-toggles{gap:16px}
+.control-room input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent)}
+.control-room .reset-scene{font-size:12px}
+.control-room .layer-toolbar{gap:15px}
+.control-room .layer-actions{flex-wrap:wrap}
+.control-room .layer-actions .primary{font-size:13px}
+.control-room .layer-toolbar select{font-size:13px}
+.control-room .empty{font:14px/1.6 "Segoe UI",Arial,sans-serif}
+.control-room .pill{font:600 10px "Segoe UI",Arial,sans-serif}
+.control-room .panel-footer{padding:15px 24px;align-items:center}
+.control-room .panel-footer span{font:10px "Segoe UI",Arial,sans-serif;letter-spacing:.2px;max-width:250px}
+.control-room .panel-footer a{font-size:12px;white-space:nowrap}
+.control-room .event p{font-size:14px}
+.control-room .event-kind,.control-room .event time{font-size:12px}
+.control-room .advanced-options{border:1px solid var(--line);border-radius:7px;margin-top:20px;padding:14px}
+.control-room .advanced-options summary{font-size:14px;font-weight:500;cursor:pointer}
+.visit-countdown{padding:12px 15px;border:1px solid var(--line);background:#1d2632;border-radius:7px;margin-top:16px;font:500 14px "Segoe UI",Arial,sans-serif;color:#dbe4ee}
+.light-mode .visit-countdown{background:#edf3f6;color:#3d596b}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:17px}
+.upload-button{position:relative;display:flex;align-items:center;justify-content:center;min-height:48px;overflow:hidden;background:#25313f;border:1px solid #4e6072;border-radius:6px;font:600 14px "Segoe UI",Arial,sans-serif;color:#e5edf2;cursor:pointer}
+.upload-button input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-button:focus-within{outline:2px solid var(--accent);outline-offset:3px}
+.light-mode .upload-button{background:#e8f0f4;color:#344f60;border-color:#aebfcb}
+.asset-list{display:grid;gap:10px;margin:16px 0}
+.asset-tile{display:flex;align-items:center;gap:13px;padding:11px;background:#202a34;border:1px solid var(--line);border-radius:6px}
+.asset-tile img{width:42px;height:42px;object-fit:contain;background:repeating-conic-gradient(#ffffff13 0% 25%,transparent 0% 50%) 50%/12px 12px;border-radius:4px}
+.asset-tile span{font-size:14px;flex:1}
+.asset-tile button{font-size:12px;padding:7px;background:#3d2730;border-radius:4px;color:#ebc6ca}
+.light-mode .asset-tile{background:#edf3f5}
+.light-mode .asset-tile button{background:#f0dfe2;color:#804a53}
+#brandingUploadStatus{min-height:18px;color:var(--muted)}
+.brand-assets{position:absolute;inset:0;pointer-events:none;z-index:2}
+.uploaded-logo{position:absolute;object-fit:contain;filter:drop-shadow(0 2px 10px #0003)}
+.brand-assets[data-corner="top-left"] .uploaded-logo{top:4%;left:4%}
+.brand-assets[data-corner="top-right"] .uploaded-logo{top:4%;right:4%}
+.brand-assets[data-corner="bottom-left"] .uploaded-logo{bottom:22%;left:4%}
+.brand-assets[data-corner="bottom-right"] .uploaded-logo{bottom:22%;right:4%}
+.uploaded-icons{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;position:absolute;right:4%;bottom:17%;max-width:45%}
+.uploaded-icons img{object-fit:contain;filter:drop-shadow(0 2px 6px #0003)}
+.has-logo .wordmark{visibility:hidden}
+.hide-brand .brand-assets{display:none}
+@media(max-width:900px){.studio{grid-template-columns:minmax(0,1fr) 380px}.control-room .tabs{gap:13px;padding:0 17px}.control-room .tabs button{font-size:13px}}
+@media(max-width:760px){.studio{display:flex;grid-template-columns:none}.control-room .panel-scroll{max-height:720px}.control-room .tabs{padding:0 20px;gap:13px}.control-room .tabs button{font-size:14px}.control-room .panel-footer span{font-size:9px}.control-room .panel-head{padding-top:24px}.brand-assets[data-corner="top-left"] .uploaded-logo,.brand-assets[data-corner="top-right"] .uploaded-logo{top:4%}}
+
+#panelToggle{font:500 14px "Segoe UI",Arial,sans-serif;padding:11px 14px}
+
+.has-logo .wordmark{display:none}.has-logo .ocean-header{justify-content:flex-end}#panelToggle{white-space:nowrap;flex-shrink:0}.wordmark{min-width:0}

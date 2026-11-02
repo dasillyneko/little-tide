@@ -2,7 +2,7 @@
 
 **A living ASCII ocean that Twitch chat feeds and grows.**
 
-Large, shaded koi, rays, turtles and axolotls move through schools of fish. Viewers type `!feed` in real Twitch chat. Food attracts nearby animals; community feeding adds residents. A rare moonwhale encounter lets viewers enter with `!catch`, and one Twitch viewer receives a persistent discovery. Streamers can optionally promise a manually gifted subscription.
+Large, shaded koi, rays, turtles and axolotls move through schools of fish. Viewers type `!feed` in real Twitch chat. Food attracts nearby animals; community feeding adds residents. Food is eaten only on mouth contact, and never expires on a timer. A rare moonwhale encounter lets viewers enter with `!catch`, and one Twitch viewer receives a persistent discovery. Streamers can optionally promise a manually gifted subscription.
 
 This is a local streamer application with a Node.js service, a control room, and a clean OBS Browser Source. There is no simulated chat, viewer-name editor, or public command-injection endpoint.
 
@@ -41,7 +41,7 @@ This is an opaque full-screen background. It is not a transparent video overlay 
 
 ## Customize your stream
 
-Open **Design** in the control room. Appearance changes update the control room and OBS together. Choose Midnight/dark or Daylight/light, an accent color, an interface font, sparkle visibility, feeding speed boost (1?3?), and ripple strength (0 turns ripples off).
+Open **Style** in the control room. Appearance changes update the control room and OBS together. Choose Midnight/dark or Daylight/light, an accent color, an interface font, sparkle visibility, feeding speed boost (1?3?), and ripple strength (0 turns ripples off).
 
 For each Ocean, Starting Soon or BRB scene, add up to eight text blocks. Edit multiline text, choose one of eight bundled system font stacks or a custom installed font name, and adjust size, color, alignment, position, width, letter spacing, opacity, bold, italic and shadow. Text size is measured at an OBS height of 1080 pixels and scales with the viewport. Custom fonts must be installed on the computer running OBS.
 
@@ -49,13 +49,15 @@ Edits preview in the control room. Click **Apply text to overlay** to save and b
 
 The same tab edits the brand name, tagline and chat-instruction wording, with toggles for branding, animal count and connection bar. Click **Apply branding & instructions** to save. These settings do not change the actual `!feed` and `!catch` chat commands.
 
-Moonwhales have a shaded silver finish and moving glints; sparkles are disabled when the browser requests reduced motion. Feeding creates three expanding water rings and animals accelerate toward the snack, slowing near it and returning to cruising speed afterward. Reduced motion uses quiet, stationary fading rings.
+Use **Branding** to upload a logo and up to six icons (PNG, JPG, WebP or GIF, up to 2 MB each), adjust logo position and image sizes, and edit or hide the on-screen branding. Uploads are stored in ignored `data/assets/` and saved with the channel. Your personal uploaded images are not part of the public repository; judges can upload their own.
+
+Moonwhales have a shaded silver finish and moving glints; sparkles are disabled when the browser requests reduced motion. Feeding creates three expanding water rings and animals accelerate toward the snack, slowing near it and returning to cruising speed afterward. Reduced motion uses quiet, stationary fading rings. The visible particles are the simulation targets: a particle disappears only when an animal?s mouth reaches it. Body overlap does not eat food. At the cap of 320 uneaten particles, further feeds add particles only as room becomes available; existing particles are never evicted. Particles are local visual simulation state and reset if the overlay reloads.
 
 ## Rules and controls
 
 - `!feed`: free, once per Twitch user ID per cooldown (8 seconds by default). Renaming a viewer does not bypass the cooldown.
 - Every 3 accepted feeds adds a large animal until the cap of 12 and seven schooling fish until the cap of 220. Feeding continues to attract animals at capacity.
-- After 12 feeds, each eligible feed has a 6% moonwhale appearance chance, with at least 5 minutes between random visits. Streamers can also invite one through the controls.
+- With **Automatic visits** enabled, a moonwhale arrives every five minutes while Twitch is connected, even with no feeds. Entry side and depth are random. It swims continuously across the full screen during the catch window. A manual invitation remains available and restarts the five-minute timer. Pausing or disabling visits prevents new automatic encounters; resuming starts a fresh five-minute interval.
 - `!catch`: one free entry per Twitch user ID during an active encounter. Default entry window: 45 seconds. Late/duplicate entries are rejected. Server-side `crypto.randomInt` selects one entrant equally.
 - No entrants means no winner. Population, settings, active encounter, entrants, discoveries and reward queue are saved per broadcaster in `data/pond-<id>.json` using serialized atomic writes. An expired encounter resolves when the same channel resumes after restart.
 - Pause blocks new feeds/encounters and pauses motion. An already announced encounter still accepts entries and closes on its original deadline.

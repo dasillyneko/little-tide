@@ -16,9 +16,9 @@ Starting Soon screens and stream breaks are often passive. We wanted to give the
 
 Little Tide is an interactive background for Twitch streams. Viewers type `!feed` in the streamer's real Twitch chat. Food appears in the water, nearby animals accelerate toward it, and ripples expand from the feeding spot. Every few accepted feeds brings another animal and a school of small fish.
 
-A silver moonwhale occasionally surfaces. Viewers can type `!catch` during a timed encounter, with one free entry per Twitch user ID. The server randomly selects one entrant and saves their discovery. The streamer can invite an encounter directly for a community moment. Optional subscription rewards use a manual fulfillment queue; the application does not purchase gift subscriptions.
+Every five minutes, a silver moonwhale swims across the screen from a random side, even if chat is quiet. Viewers can type `!catch` during a timed encounter, with one free entry per Twitch user ID. The server randomly selects one entrant and saves their discovery. The streamer can invite an encounter directly for a community moment. Optional subscription rewards use a manual fulfillment queue; the application does not purchase gift subscriptions.
 
-The streamer adds a local Browser Source to OBS. A separate control room manages scenes, interactions, saved discoveries and appearance. Each scene supports editable text blocks with font, color, size, positioning, alignment, bold, italic, spacing, opacity and shadow controls. Light and dark themes, branding, ripple strength and feeding speed are configurable.
+The streamer adds a local Browser Source to OBS. A separate control room manages scenes, interactions, saved discoveries and appearance. Each scene supports editable text blocks with font, color, size, positioning, alignment, bold, italic, spacing, opacity and shadow controls. Light and dark themes, uploaded logos and icons, branding, ripple strength and feeding speed are configurable. Food disappears only on mouth contact.
 
 ## How we built it
 
@@ -38,7 +38,7 @@ We needed to connect actual Twitch chat to an OBS view without exposing tokens o
 
 ## Accomplishments
 
-Little Tide combines a shared Twitch experience with a stream-ready background and a flexible design editor. The code includes 15 automated tests covering identity-based cooldowns, population growth, encounter rewards, persistence, settings validation, connection recovery, multi-client updates, feeding acceleration and moonwhale rasterization. TypeScript and production build checks pass.
+Little Tide combines a shared Twitch experience with a stream-ready background and a flexible design editor. The code includes 23 automated tests covering identity-based cooldowns, population growth, encounter rewards, persistence, settings validation, connection recovery, multi-client updates, feeding acceleration and moonwhale rasterization. TypeScript and production build checks pass.
 
 ## What we learned
 

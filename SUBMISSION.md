@@ -12,7 +12,7 @@ Turn a stream's quiet moments into a living ASCII ocean. Twitch viewers feed the
 
 Little Tide gives viewers a calm, collective activity during Starting Soon, breaks, and chatting streams. A `!feed` command in Twitch chat drops food into the ocean, attracts nearby animals, and contributes toward new residents. Each viewer acts through their authenticated Twitch identity. There are no paid entries or odds boosts.
 
-A rare moonwhale occasionally surfaces. Viewers type `!catch` during the entry window, and the server chooses one entrant to receive a saved discovery. Streamers can optionally fund a manually gifted-sub reward, with a queue that tracks promised and fulfilled rewards.
+Every five minutes, a silver moonwhale swims across the screen from a random side. Viewers type `!catch` during the entry window, and the server chooses one entrant to receive a saved discovery. Streamers can optionally fund a manually gifted-sub reward, with a queue that tracks promised and fulfilled rewards.
 
 We built an installed Twitch integration using device authorization, EventSub WebSockets for `channel.chat.message`, and the Twitch API for broadcaster identity and optional encounter announcements. A local Node server owns the game state, deduplicates events, applies cooldowns, persists discoveries per channel, and broadcasts updates to the control room and OBS Browser Source. The overlay contains no OAuth tokens.
 

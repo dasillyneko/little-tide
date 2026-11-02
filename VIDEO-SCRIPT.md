@@ -20,7 +20,7 @@ Say: “This command comes from real Twitch chat through EventSub. Food lands in
 
 Click Invite a moonwhale, show its silver body, and send `!catch` in Twitch chat. Wait through the 15-second window. Open Discoveries and show the result.
 
-Say: “A rare moonwhale can appear after feeding, or the streamer can invite one. Every viewer gets one free catch entry. When the window closes, the server selects an explorer and saves their discovery.”
+Say: “A silver moonwhale crosses the screen automatically every five minutes, from a random side. I can also invite one for this demonstration. Every viewer gets one free catch entry. When the window closes, the server selects an explorer and saves their discovery.”
 
 ## 1:20–1:55 — Make it your stream
 

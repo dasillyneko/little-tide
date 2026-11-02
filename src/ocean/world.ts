@@ -22,7 +22,7 @@ export const SHARK_NODES = 20;
 export type SharkKind = "classic" | "hammerhead" | "zebra" | "tiger" | "greathammer" | "mako" | "thresher" | "nurse" | "koi" | "manta" | "turtle" | "axolotl" | "moonwhale";
 
 /** Which sharks to put in the water; size is relative to the biggest. */
-export type SharkSpec = { kind: SharkKind; size: number };
+export type SharkSpec = { kind: SharkKind; size: number; key?:string };
 
 // The landing hero: four of the same shark at different depths.
 const DEFAULT_SHARKS: SharkSpec[] = [
@@ -54,6 +54,7 @@ export interface Fish {
 
 export interface Shark {
   id: number;
+  key?:string;
   kind: SharkKind;
   length: number;
   /** Spine positions, snout first: [x0, y0, x1, y1, ...]. */
@@ -75,7 +76,7 @@ export interface Shark {
 }
 
 export interface WorldEvent {
-  kind: "eat" | "splash";
+  kind: "eat" | "splash" | "nibble";
   x: number;
   y: number;
 }
@@ -87,13 +88,47 @@ const FISH_FLEE_K = 1100;
 const BLIND_COS = -0.6; // ~127° either side of the heading is visible
 
 export class World {
-  food: {x:number;y:number;until:number}[] = [];
+  food: {id:number;x:number;y:number}[] = [];
+  private foodId=0;
+  private cellW=6;
+  private cellH=9;
+  private mouthRadius=4;
+  private visit:{progress:number;side:'left'|'right';lane:number}|null=null;
   peaceful = true;
-  feedBoost = 1.8;
+  feedBoost = 2.6;
   feed(x:number,y:number) {
-    this.food.push({x:x*this.width,y:y*this.height,until:this.time+12});
-    if(this.food.length>8)this.food.shift();
+    // Keep uneaten particles. At capacity, wait for mouths to make room.
+    const count=Math.min(10,Math.max(0,320-this.food.length));
+    for(let i=0;i<count;i++){
+      const angle=i*2.399963,spread=5+Math.sqrt(i)*8;
+      this.food.push({id:this.foodId++,x:clamp(x*this.width+Math.cos(angle)*spread,10,this.width-10),y:clamp(y*this.height+Math.sin(angle)*spread,10,this.height-10)});
+    }
     this.events.push({kind:'splash',x:x*this.width,y:y*this.height});
+  }
+  positionVisit(progress:number,side:'left'|'right',lane:number) {
+    this.visit={progress,side,lane};
+    const whale=this.sharks.find(s=>s.kind==='moonwhale');if(!whale)return;
+    const p=clamp(progress,0,1),sign=side==='left'?1:-1,L=whale.length;
+    const left=-L*.16+(this.width+L*1.32)*p;
+    const head=side==='left'?left:this.width-left;
+    const y=this.height*(lane+Math.sin(p*Math.PI*2)*.025);
+    whale.heading=side==='left'?0:Math.PI;whale.phase=p*28;whale.speed=60;
+    for(let k=0;k<SHARK_NODES;k++){whale.nodes[k*2]=head-sign*L*k/(SHARK_NODES-1);whale.nodes[k*2+1]=y;}
+  }
+  clearVisit(){this.visit=null;}
+  consumeFood() {
+    this.food=this.food.filter(pellet=>{
+      const large=this.sharks.some(animal=>Math.hypot(animal.nodes[0]-pellet.x,animal.nodes[1]-pellet.y)<=this.mouthRadius+2);
+      const small=!large&&this.fish.some(f=>{
+        if(!f.alive)return false;
+        const speed=Math.hypot(f.vx,f.vy)||1;
+        const mx=Math.floor(f.x/this.cellW)*this.cellW+this.cellW/2+(f.vx/speed)*this.cellW*.35;
+        const my=Math.floor(f.y/this.cellH)*this.cellH+this.cellH/2+1;
+        return Math.hypot(mx-pellet.x,my-pellet.y)<=3.5;
+      });
+      if(large||small)this.events.push({kind:'nibble',x:pellet.x,y:pellet.y});
+      return !large&&!small;
+    });
   }
   setSchoolCount(count:number) {
     count=Math.max(0,Math.min(220,count));
@@ -105,16 +140,19 @@ export class World {
   }
   setResidents(specs: SharkSpec[]) {
     const base=clamp(Math.min(this.width,this.height)*.48,180,440);
-    while(this.sharks.length>specs.length)this.sharks.pop();
+    const byKey=new Map(this.sharks.filter(s=>s.key).map(s=>[s.key,s]));
+    const next:Shark[]=[];
     specs.forEach((spec,i)=>{
-      if(this.sharks[i]){this.sharks[i].kind=spec.kind;this.sharks[i].length=base*spec.size;return;}
+      const existing=spec.key?byKey.get(spec.key):this.sharks[i];
+      if(existing){existing.kind=spec.kind;existing.length=base*spec.size;next.push(existing);return;}
       const starts=[[.4,.3,-.35],[.72,.62,.8],[.32,.72,3.3],[.64,.25,3.2]];
       const start=spec.kind==='moonwhale'?[.8,.62,.1]:starts[i];
       const length=base*spec.size,heading=start?start[2]:rand(0,TAU),x=(start?start[0]:rand(.2,.8))*this.width,y=(start?start[1]:rand(.2,.8))*this.height;
       const nodes=new Float32Array(SHARK_NODES*2);
       for(let k=0;k<SHARK_NODES;k++){nodes[k*2]=x-Math.cos(heading)*length*k/(SHARK_NODES-1);nodes[k*2+1]=y-Math.sin(heading)*length*k/(SHARK_NODES-1);}
-      this.sharks.push({id:i+1,kind:spec.kind,length,nodes,heading,speed:28,phase:rand(0,TAU),turn:0,hunger:0,wander:0,orbitDir:i%2?1:-1,orbitRadius:Math.min(this.width,this.height)*.32,target:null,retargetAt:0,depth:spec.size});
+      next.push({id:i+1,key:spec.key,kind:spec.kind,length,nodes,heading,speed:28,phase:rand(0,TAU),turn:0,hunger:0,wander:0,orbitDir:i%2?1:-1,orbitRadius:Math.min(this.width,this.height)*.32,target:null,retargetAt:0,depth:spec.size});
     });
+    this.sharks=next;
   }
   width = 0;
   height = 0;
@@ -146,6 +184,9 @@ export class World {
 
   resize(width: number, height: number, cellW: number, cellH: number) {
     const first = this.width === 0;
+    const oldW=this.width||width,oldH=this.height||height;
+    for(const pellet of this.food){pellet.x*=width/oldW;pellet.y*=height/oldH;}
+    this.cellW=cellW;this.cellH=cellH;this.mouthRadius=clamp(cellW*.45,2.5,4);
     this.width = width;
     this.height = height;
     // Spacing is set in grid cells so every fish lands in its own cell.
@@ -257,10 +298,10 @@ export class World {
 
   step(dt: number) {
     this.time += dt;
-    this.food = this.food.filter(f=>f.until>this.time);
     this.rebuildHash();
     this.stepFish(dt);
     this.stepSharks(dt);
+    this.consumeFood();
     this.respawn();
   }
 
@@ -454,7 +495,7 @@ export class World {
         let nearest=this.food[0];for(const snack of this.food)if(Math.hypot(snack.x-f.x,snack.y-f.y)<Math.hypot(nearest.x-f.x,nearest.y-f.y))nearest=snack;
         const dx=nearest.x-f.x,dy=nearest.y-f.y,d=Math.hypot(dx,dy)||1;
         foodDrive=1+(this.feedBoost-1)*clamp((d-25)/160,0,1);
-        if(d>12){ax+=dx/d*145*foodDrive;ay+=dy/d*145*foodDrive;}
+        if(d>3){ax+=dx/d*300*foodDrive;ay+=dy/d*300*foodDrive;}
       }
       // Soft walls.
       const m = 36;
@@ -501,6 +542,7 @@ export class World {
     const cyW = H / 2;
 
     for (const sh of sharks) {
+      if(sh.kind==='moonwhale'&&this.visit)continue;
       const L = sh.length;
       const nodes = sh.nodes;
       const hx = nodes[0];
@@ -547,9 +589,11 @@ export class World {
       }
 
       let foodDrive=1;
+      let snackTarget:{x:number;y:number;distance:number}|null=null;
       if(this.peaceful && this.food.length){
         let nearest=this.food[0];for(const snack of this.food)if(Math.hypot(snack.x-hx,snack.y-hy)<Math.hypot(nearest.x-hx,nearest.y-hy))nearest=snack;
         const tx=nearest.x-hx,ty=nearest.y-hy,d=Math.hypot(tx,ty)||1;
+        snackTarget={x:nearest.x,y:nearest.y,distance:d};
         foodDrive=1+(this.feedBoost-1)*clamp((d-30)/160,0,1);
         dx+=tx/d*2.8;dy+=ty/d*2.8;
       }
@@ -592,17 +636,19 @@ export class World {
         dy += (toY / d) * w;
       }
 
-      const desired = Math.atan2(dy, dx);
+      const desired = snackTarget ? Math.atan2(snackTarget.y-hy,snackTarget.x-hx) : Math.atan2(dy, dx);
       // Sharks can't pivot on the spot: the turning circle grows with speed.
-      const agility = Math.min(hunting||foodDrive>1.1 ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+      const agility = snackTarget ? 3.5 : Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
       const maxTurn = agility * dt;
       const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
       sh.heading += turned;
       sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
 
       const cruise = 30 + L * 0.04;
-      const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise * foodDrive;
-      sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
+      const arrival=snackTarget?clamp(snackTarget.distance/65,.12,1):1;
+      const facing=snackTarget&&snackTarget.distance<90 ? .3+.7*Math.max(0,Math.cos(angleDiff(sh.heading,desired))) : 1;
+      const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise * foodDrive * arrival * facing;
+      sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (snackTarget?5:1.6));
       sh.phase += dt * (2 + sh.speed / 24);
 
       nodes[0] += Math.cos(sh.heading) * sh.speed * dt;

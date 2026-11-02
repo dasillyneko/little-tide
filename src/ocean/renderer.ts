@@ -510,6 +510,8 @@ export class AsciiRenderer {
       if (e.kind === "eat") {
         this.stamp(this.heat, e.x, e.y, 2, 1);
         this.stamp(this.energy, e.x, e.y, 3, 0.9);
+      } else if(e.kind==='nibble') {
+        this.stamp(this.energy,e.x,e.y,2,.35);
       } else {
         this.stamp(this.energy, e.x, e.y, 6, 1.4);
       }

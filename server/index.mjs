@@ -6,6 +6,7 @@ import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {Storage} from './storage.mjs';
 import {Pond,freshPond} from './pond.mjs';
 import {Twitch} from './twitch.mjs';
+import {saveImage,readImage} from './assets.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 export async function createApp({dataDir=resolve(root,'data'),port=Number(process.env.PORT||8787),twitchFactory=options=>new Twitch(options)}={}){
  const storage=new Storage(dataDir),clients=new Set(),csrf=randomBytes(32).toString('hex');let channel=null,persistenceError=null;
@@ -21,18 +22,26 @@ export async function createApp({dataDir=resolve(root,'data'),port=Number(proces
  if(req.method==='GET'&&url.pathname==='/api/state'){json(res,200,state());return;}
  if(req.method==='GET'&&url.pathname==='/api/bootstrap'){json(res,200,{...state(),csrf,clientId:(await storage.read('config.json',{})).clientId||'',overlayUrl:origin+'/overlay'});return;}
  if(req.method==='GET'&&url.pathname==='/api/events'){res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive'});res.write(`event: state\ndata: ${JSON.stringify(state())}\n\n`);clients.add(res);req.on('close',()=>clients.delete(res));return;}
- if(req.method==='POST'&&url.pathname.startsWith('/api/')){const token=Buffer.from(String(req.headers['x-pond-csrf']||''));if(token.length!==csrf.length||!timingSafeEqual(token,Buffer.from(csrf))){json(res,403,{error:'Refresh the controls page and try again.'});return;}let text='';for await(const chunk of req){text+=chunk;if(text.length>65536){json(res,413,{error:'Request too large'});return;}}let body;try{body=JSON.parse(text||'{}');}catch{json(res,400,{error:'Invalid JSON'});return;}
+ if(req.method==='POST'&&url.pathname.startsWith('/api/')){const token=Buffer.from(String(req.headers['x-pond-csrf']||''));if(token.length!==csrf.length||!timingSafeEqual(token,Buffer.from(csrf))){json(res,403,{error:'Refresh the controls page and try again.'});return;}let text='';const limit=url.pathname==='/api/branding/upload'?3*1024*1024:65536;for await(const chunk of req){text+=chunk;if(text.length>limit){json(res,413,{error:'Request too large'});return;}}let body;try{body=JSON.parse(text||'{}');}catch{json(res,400,{error:'Invalid JSON'});return;}
  if(url.pathname==='/api/connect'){if(twitch.pending){json(res,409,{error:'A sign-in is already waiting. Disconnect to cancel it.'});return;}const result=await twitch.begin(String(body.clientId||'').trim());await storage.write('config.json',{clientId:twitch.clientId});json(res,200,result);return;}
  if(url.pathname==='/api/disconnect'){await twitch.disconnect();channel=null;pond=attachPond();notify('state',state());json(res,200,{ok:true});return;}
  if(url.pathname==='/api/settings'){pond.configure(body);json(res,200,{ok:true});return;}
+ if(url.pathname==='/api/branding/upload'){
+  if(!channel){json(res,409,{error:'Connect your Twitch channel before uploading branding.'});return;}
+  if(!['logo','icon'].includes(body.slot))throw Error('Invalid branding slot');
+  if(body.slot==='icon'&&pond.state.branding.icons.length>=6)throw Error('Invalid upload: use up to six icons. Remove one first.');
+  const asset=await saveImage(storage.directory,body.dataUrl);pond.attachAsset(body.slot,asset);json(res,200,{ok:true,asset});return;
+ }
+ if(url.pathname==='/api/branding/remove'){pond.removeAsset(body.id);json(res,200,{ok:true});return;}
  if(url.pathname==='/api/encounter'){if(twitch.status.phase!=='connected'){json(res,409,{error:'Connect Twitch chat before opening an encounter.'});return;}if(!pond.startEncounter()){json(res,409,{error:'An encounter is active or interactions are paused.'});return;}json(res,200,{ok:true});return;}
  if(url.pathname==='/api/reward'){pond.markReward(body.id,body.status);json(res,200,{ok:true});return;}
  json(res,404,{error:'Unknown action'});return;}
+ if(req.method==='GET'&&url.pathname.startsWith('/assets/')){const asset=await readImage(storage.directory,url.pathname);if(!asset){json(res,404,{error:'Image not found'});return;}res.writeHead(200,{'Content-Type':asset.mime,'Cache-Control':'private, max-age=86400'});res.end(asset.bytes);return;}
  if(req.method==='GET'){const files={'/':'index.html','/overlay':'index.html','/app.js':'app.js','/style.css':'style.css','/credits.txt':'credits.txt'};const file=files[url.pathname];if(file){const content=await readFile(resolve(root,'dist',file));res.writeHead(200,{'Content-Type':file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.txt')?'text/plain':'text/html','Cache-Control':'no-cache'});res.end(content);return;}}
  json(res,404,{error:'Not found'});
  }catch(error){const safe=/Invalid|Enter|Finish|Reward not found/.test(error.message)?error.message:'The action failed. Check your connection and try again.';json(res,400,{error:safe});}});
  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});origin=`http://127.0.0.1:${server.address().port}`;
- const timer=setInterval(()=>pond.tick(),500),heartbeat=setInterval(()=>{for(const client of clients)client.write(': heartbeat\n\n');},15000);timer.unref();heartbeat.unref();
+ const timer=setInterval(()=>{if(channel)pond.tick(twitch.status.phase==='connected');},500),heartbeat=setInterval(()=>{for(const client of clients)client.write(': heartbeat\n\n');},15000);timer.unref();heartbeat.unref();
  twitch.restore().catch(()=>{twitch.setStatus({phase:'disconnected',error:'Could not restore saved Twitch authorization. Connect again.'});});
  return {server,origin,storage,getPond:()=>pond,twitch,async close(){clearInterval(timer);clearInterval(heartbeat);twitch.close();for(const client of clients)client.end();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await storage.queue;}};
 }
