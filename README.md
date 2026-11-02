@@ -2,7 +2,7 @@
 
 **A living ASCII ocean that Twitch chat feeds and grows.**
 
-Large, shaded koi, rays, turtles and axolotls move through schools of fish. Viewers type `!feed` in real Twitch chat. Food attracts nearby animals; community feeding adds residents. Food is eaten only on mouth contact, and never expires on a timer. A rare moonwhale encounter lets viewers enter with `!catch`, and one Twitch viewer receives a persistent discovery. Streamers can optionally promise a manually gifted subscription.
+Large, shaded koi, rays, turtles and axolotls move through schools of fish. Viewers type `!feed` in real Twitch chat. Food attracts nearby animals with attention that fades with distance; distant animals continue their normal patrol. When another animal eats a target, approaching fish immediately disengage or choose another nearby particle. Community feeding adds residents. Food is eaten only on mouth contact, and never expires on a timer. A rare moonwhale encounter lets viewers enter with `!catch`, and one Twitch viewer receives a persistent discovery. Streamers can optionally promise a manually gifted subscription.
 
 This is a local streamer application with a Node.js service, a control room, and a clean OBS Browser Source. There is no simulated chat, viewer-name editor, or public command-injection endpoint.
 

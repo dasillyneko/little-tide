@@ -38,7 +38,7 @@ We needed to connect actual Twitch chat to an OBS view without exposing tokens o
 
 ## Accomplishments
 
-Little Tide combines a shared Twitch experience with a stream-ready background and a flexible design editor. The code includes 23 automated tests covering identity-based cooldowns, population growth, encounter rewards, persistence, settings validation, connection recovery, multi-client updates, feeding acceleration and moonwhale rasterization. TypeScript and production build checks pass.
+Little Tide combines a shared Twitch experience with a stream-ready background and a flexible design editor. The code includes 26 automated tests covering identity-based cooldowns, population growth, encounter rewards, persistence, settings validation, connection recovery, multi-client updates, feeding acceleration and moonwhale rasterization. TypeScript and production build checks pass.
 
 ## What we learned
 

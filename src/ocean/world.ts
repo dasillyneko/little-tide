@@ -14,7 +14,7 @@
  * so stragglers get picked off. Eaten fish come back later as new schools
  * swimming in from the edges, which keeps the population steady.
  */
-import { angleDiff, clamp, current, rand, randInt, TAU } from "./math";
+import { angleDiff, clamp, current, rand, randInt, smoothstep, TAU } from "./math";
 import { pickSpecies, SPECIES } from "./species";
 
 export const SHARK_NODES = 20;
@@ -33,6 +33,7 @@ const DEFAULT_SHARKS: SharkSpec[] = [
 ];
 
 export interface Fish {
+  foodTarget?:number|null;
   x: number;
   y: number;
   vx: number;
@@ -55,6 +56,8 @@ export interface Fish {
 export interface Shark {
   id: number;
   key?:string;
+  foodTarget?:number|null;
+  returningUntil?:number;
   kind: SharkKind;
   length: number;
   /** Spine positions, snout first: [x0, y0, x1, y1, ...]. */
@@ -116,6 +119,32 @@ export class World {
     for(let k=0;k<SHARK_NODES;k++){whale.nodes[k*2]=head-sign*L*k/(SHARK_NODES-1);whale.nodes[k*2+1]=y;}
   }
   clearVisit(){this.visit=null;}
+  private nearbyFood(x:number,y:number) {
+    const range=clamp(Math.min(this.width,this.height)*.42,150,420);
+    let nearest:typeof this.food[number]|null=null,distance=range;
+    for(const pellet of this.food){const d=Math.hypot(pellet.x-x,pellet.y-y);if(d<distance){nearest=pellet;distance=d;}}
+    if(!nearest)return null;
+    const interest=1-smoothstep(range*.45,range,distance);
+    return {pellet:nearest,distance,interest};
+  }
+  private releaseFoodTargets() {
+    const available=new Set(this.food.map(p=>p.id));
+    for(const animal of this.sharks){
+      if(animal.foodTarget==null||available.has(animal.foodTarget))continue;
+      const replacement=this.nearbyFood(animal.nodes[0],animal.nodes[1]);
+      if(replacement&&replacement.interest>.05){animal.foodTarget=replacement.pellet.id;continue;}
+      animal.foodTarget=null;animal.returningUntil=this.time+1.2;
+      animal.speed=Math.min(animal.speed,30+animal.length*.04);animal.wander=animal.orbitDir*.6;
+    }
+    for(const fish of this.fish){
+      if(fish.foodTarget==null||available.has(fish.foodTarget))continue;
+      const replacement=this.nearbyFood(fish.x,fish.y);
+      if(replacement&&replacement.interest>.05){fish.foodTarget=replacement.pellet.id;continue;}
+      fish.foodTarget=null;
+      const heading=Math.atan2(fish.vy,fish.vx)+fish.millDir*.45,cruise=SPECIES[fish.species].cruise;
+      fish.vx=Math.cos(heading)*cruise;fish.vy=Math.sin(heading)*cruise;
+    }
+  }
   consumeFood() {
     this.food=this.food.filter(pellet=>{
       const large=this.sharks.some(animal=>Math.hypot(animal.nodes[0]-pellet.x,animal.nodes[1]-pellet.y)<=this.mouthRadius+2);
@@ -129,6 +158,7 @@ export class World {
       if(large||small)this.events.push({kind:'nibble',x:pellet.x,y:pellet.y});
       return !large&&!small;
     });
+    this.releaseFoodTargets();
   }
   setSchoolCount(count:number) {
     count=Math.max(0,Math.min(220,count));
@@ -298,6 +328,8 @@ export class World {
 
   step(dt: number) {
     this.time += dt;
+    // Also drop targets when food was consumed between frames.
+    this.releaseFoodTargets();
     this.rebuildHash();
     this.stepFish(dt);
     this.stepSharks(dt);
@@ -491,11 +523,12 @@ export class World {
       f.alarm = alarm;
 
       let foodDrive=1;
-      if(this.food.length){
-        let nearest=this.food[0];for(const snack of this.food)if(Math.hypot(snack.x-f.x,snack.y-f.y)<Math.hypot(nearest.x-f.x,nearest.y-f.y))nearest=snack;
-        const dx=nearest.x-f.x,dy=nearest.y-f.y,d=Math.hypot(dx,dy)||1;
-        foodDrive=1+(this.feedBoost-1)*clamp((d-25)/160,0,1);
-        if(d>3){ax+=dx/d*300*foodDrive;ay+=dy/d*300*foodDrive;}
+      const snack=this.nearbyFood(f.x,f.y);
+      f.foodTarget=snack&&snack.interest>.05?snack.pellet.id:null;
+      if(snack){
+        const dx=snack.pellet.x-f.x,dy=snack.pellet.y-f.y,d=snack.distance||1;
+        foodDrive=1+(this.feedBoost-1)*snack.interest*clamp((d-25)/160,0,1);
+        if(d>3){ax+=dx/d*300*foodDrive*snack.interest;ay+=dy/d*300*foodDrive*snack.interest;}
       }
       // Soft walls.
       const m = 36;
@@ -589,13 +622,14 @@ export class World {
       }
 
       let foodDrive=1;
-      let snackTarget:{x:number;y:number;distance:number}|null=null;
-      if(this.peaceful && this.food.length){
-        let nearest=this.food[0];for(const snack of this.food)if(Math.hypot(snack.x-hx,snack.y-hy)<Math.hypot(nearest.x-hx,nearest.y-hy))nearest=snack;
-        const tx=nearest.x-hx,ty=nearest.y-hy,d=Math.hypot(tx,ty)||1;
-        snackTarget={x:nearest.x,y:nearest.y,distance:d};
-        foodDrive=1+(this.feedBoost-1)*clamp((d-30)/160,0,1);
-        dx+=tx/d*2.8;dy+=ty/d*2.8;
+      let snackTarget:{x:number;y:number;distance:number;interest:number}|null=null;
+      const snack=this.peaceful?this.nearbyFood(hx,hy):null;
+      sh.foodTarget=snack&&snack.interest>.05?snack.pellet.id:null;
+      if(snack){
+        const tx=snack.pellet.x-hx,ty=snack.pellet.y-hy,d=snack.distance||1;
+        snackTarget={x:snack.pellet.x,y:snack.pellet.y,distance:d,interest:snack.interest};
+        foodDrive=1+(this.feedBoost-1)*snack.interest*clamp((d-30)/160,0,1);
+        dx+=tx/d*2.8*snack.interest;dy+=ty/d*2.8*snack.interest;
       }
       // Give other sharks room.
       for (const other of sharks) {
@@ -636,17 +670,20 @@ export class World {
         dy += (toY / d) * w;
       }
 
-      const desired = snackTarget ? Math.atan2(snackTarget.y-hy,snackTarget.x-hx) : Math.atan2(dy, dx);
+      const returning=!snackTarget&&(sh.returningUntil||0)>time;
+      let desired=Math.atan2(dy,dx);
+      if(snackTarget)desired+=angleDiff(desired,Math.atan2(snackTarget.y-hy,snackTarget.x-hx))*snackTarget.interest;
+      else if(returning){const tangent=Math.atan2((hx-cxW)*sh.orbitDir,-(hy-cyW)*sh.orbitDir);desired+=angleDiff(desired,tangent)*.8;}
       // Sharks can't pivot on the spot: the turning circle grows with speed.
-      const agility = snackTarget ? 3.5 : Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+      const agility = snackTarget ? .8+2.7*snackTarget.interest : returning?2:Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
       const maxTurn = agility * dt;
       const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
       sh.heading += turned;
       sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
 
       const cruise = 30 + L * 0.04;
-      const arrival=snackTarget?clamp(snackTarget.distance/65,.12,1):1;
-      const facing=snackTarget&&snackTarget.distance<90 ? .3+.7*Math.max(0,Math.cos(angleDiff(sh.heading,desired))) : 1;
+      const arrival=snackTarget?1-(1-clamp(snackTarget.distance/65,.12,1))*snackTarget.interest:1;
+      const facing=snackTarget&&snackTarget.distance<90 ? 1-(.7-.7*Math.max(0,Math.cos(angleDiff(sh.heading,desired))))*snackTarget.interest : 1;
       const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise * foodDrive * arrival * facing;
       sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (snackTarget?5:1.6));
       sh.phase += dt * (2 + sh.speed / 24);
