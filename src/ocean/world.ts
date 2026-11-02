@@ -58,6 +58,7 @@ export interface Shark {
   key?:string;
   foodTarget?:number|null;
   returningUntil?:number;
+  steerRate?:number;
   kind: SharkKind;
   length: number;
   /** Spine positions, snout first: [x0, y0, x1, y1, ...]. */
@@ -98,7 +99,7 @@ export class World {
   private mouthRadius=4;
   private visit:{progress:number;side:'left'|'right';lane:number}|null=null;
   peaceful = true;
-  feedBoost = 2.6;
+  feedBoost = 1.15;
   feed(x:number,y:number) {
     // Keep uneaten particles. At capacity, wait for mouths to make room.
     const count=Math.min(10,Math.max(0,320-this.food.length));
@@ -528,7 +529,7 @@ export class World {
       if(snack){
         const dx=snack.pellet.x-f.x,dy=snack.pellet.y-f.y,d=snack.distance||1;
         foodDrive=1+(this.feedBoost-1)*snack.interest*clamp((d-25)/160,0,1);
-        if(d>3){ax+=dx/d*300*foodDrive*snack.interest;ay+=dy/d*300*foodDrive*snack.interest;}
+        if(d>3){ax+=dx/d*85*foodDrive*snack.interest;ay+=dy/d*85*foodDrive*snack.interest;}
       }
       // Soft walls.
       const m = 36;
@@ -675,9 +676,11 @@ export class World {
       if(snackTarget)desired+=angleDiff(desired,Math.atan2(snackTarget.y-hy,snackTarget.x-hx))*snackTarget.interest;
       else if(returning){const tangent=Math.atan2((hx-cxW)*sh.orbitDir,-(hy-cyW)*sh.orbitDir);desired+=angleDiff(desired,tangent)*.8;}
       // Sharks can't pivot on the spot: the turning circle grows with speed.
-      const agility = snackTarget ? .8+2.7*snackTarget.interest : returning?2:Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
-      const maxTurn = agility * dt;
-      const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
+      const agility = snackTarget ? .65+.35*snackTarget.interest : returning?1:Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+      // Ease into a turn instead of immediately rotating at the new target rate.
+      const wantedRate=clamp(angleDiff(sh.heading,desired)*1.8,-agility,agility);
+      sh.steerRate=(sh.steerRate||0)+(wantedRate-(sh.steerRate||0))*Math.min(1,dt*2.2);
+      const turned = sh.steerRate * dt;
       sh.heading += turned;
       sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
 
@@ -685,7 +688,7 @@ export class World {
       const arrival=snackTarget?1-(1-clamp(snackTarget.distance/65,.12,1))*snackTarget.interest:1;
       const facing=snackTarget&&snackTarget.distance<90 ? 1-(.7-.7*Math.max(0,Math.cos(angleDiff(sh.heading,desired))))*snackTarget.interest : 1;
       const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise * foodDrive * arrival * facing;
-      sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (snackTarget?5:1.6));
+      sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (snackTarget?1.4:1.6));
       sh.phase += dt * (2 + sh.speed / 24);
 
       nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
