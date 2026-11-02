@@ -99,7 +99,7 @@ export class World {
   private mouthRadius=4;
   private visit:{progress:number;side:'left'|'right';lane:number}|null=null;
   peaceful = true;
-  feedBoost = 1.15;
+  feedBoost = 1.4;
   feed(x:number,y:number) {
     // Keep uneaten particles. At capacity, wait for mouths to make room.
     const count=Math.min(10,Math.max(0,320-this.food.length));
