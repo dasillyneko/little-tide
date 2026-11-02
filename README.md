@@ -18,6 +18,8 @@ npm start
 
 Open **http://127.0.0.1:8787**. Keep the process running while streaming. Use `PORT` to change the port if required. The service binds only to `127.0.0.1`; it is designed to run on the same computer as OBS. No paid API, cloud account, public webhook, or Twitch Extension review is required.
 
+Open a particular control panel directly with `/?panel=design`, `/?panel=branding`, `/?panel=activity`, or `/?panel=collection`.
+
 ## Connect Twitch
 
 1. Register an application at https://dev.twitch.tv/console/apps/create. Your Twitch account needs a verified email and two-factor authentication.

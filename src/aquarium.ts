@@ -36,7 +36,9 @@ export class Aquarium {
  appearance(design:Design){this.light=design.colorScheme==='light';this.rippleStrength=design.rippleStrength;this.world.feedBoost=design.feedBoost;this.renderer.setLight(this.light);this.renderer.sparkles=design.sparkles&&!this.reduced;}
  feed(x:number,y:number,user:string){this.world.feed(x,y);this.snacks.push({x,y,user,at:performance.now()});if(this.snacks.length>12)this.snacks.shift();}
  frame=(now:number)=>{
-  requestAnimationFrame(this.frame);if(document.hidden||now-this.frameTime<1000/30)return;
+  // Browser-source timestamps can land just below 33.333 ms. Allow rounding
+  // tolerance so a 30 fps source does not drop alternating animation frames.
+  requestAnimationFrame(this.frame);if(document.hidden||now-this.frameTime<1000/30-.5)return;
   this.frameTime=now;const dt=Math.min((now-this.last)/1000||1/30,.05);this.last=now;
   this.positionWhale();if(!this.paused)this.world.step(dt*this.speed*(this.reduced?.25:1));this.renderer.render(this.world,dt);
   const ctx=this.canvas.getContext('2d')!;ctx.save();
