@@ -1,6 +1,11 @@
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
-const read = path => readFile(new URL(path, import.meta.url), 'utf8');
-const [html, css, core, app] = await Promise.all(['src/index.html','src/style.css','src/core.mjs','src/app.js'].map(read));
-await mkdir(new URL('dist/', import.meta.url), { recursive: true });
-await writeFile(new URL('dist/index.html', import.meta.url), html.replace('/* STYLES */', css).replace('/* APPLICATION */', core.replaceAll('export ', '') + '\n' + app));
-console.log('Built dist/index.html (self-contained; no runtime dependencies).');
+import {build} from 'esbuild';
+import {readFile,mkdir,writeFile,copyFile} from 'node:fs/promises';
+await mkdir('dist',{recursive:true});
+await build({entryPoints:['src/main.ts'],bundle:true,format:'iife',target:'es2022',outfile:'dist/app.js',minify:true,legalComments:'eof'});
+await copyFile('src/style.css','dist/style.css');
+await copyFile('src/index.html','dist/index.html');
+await copyFile('THIRD_PARTY_NOTICES.md','dist/credits.txt');
+await mkdir('outputs',{recursive:true});
+const [html,css,js]=await Promise.all(['src/index.html','src/style.css','dist/app.js'].map(f=>readFile(f,'utf8')));
+await writeFile('outputs/aquarium.html',html.replace('<link rel="stylesheet" href="/style.css">',()=>`<style>${css}</style>`).replace('<script src="/app.js" defer></script>',()=>`<script>window.__LITTLE_TIDE_VISUAL_ONLY__=true;${js.replaceAll('</script','<\\/script')}</script>`));
+console.log('Built live app in dist/ and self-contained visual in outputs/aquarium.html');

@@ -1,1 +1,1 @@
-{"name":"little-tide","version":"0.1.0","private":true,"type":"module","scripts":{"build":"node build.mjs","test":"node --test test/core.test.mjs"}}
+{"name":"little-tide","version":"1.0.0","private":true,"type":"module","engines":{"node":">=22"},"scripts":{"build":"node build.mjs","start":"node server/index.mjs","dev":"node build.mjs && node server/index.mjs","test":"node --test test/*.test.mjs","typecheck":"tsc --noEmit"},"dependencies":{"ws":"^8.18.0"},"devDependencies":{"esbuild":"^0.25.0","typescript":"^5.8.0"}}

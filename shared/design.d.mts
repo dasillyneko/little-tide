@@ -1,0 +1,9 @@
+export type Scene='ocean'|'starting'|'brb';
+export type TextLayer={id:string;text:string;x:number;y:number;width:number;size:number;font:string;customFont:string;color:string;align:'left'|'center'|'right';bold:boolean;italic:boolean;shadow:boolean;opacity:number;letterSpacing:number;visible:boolean};
+export type TextLayers=Record<Scene,TextLayer[]>;
+export type Design={colorScheme:'light'|'dark';accentColor:string;showBrand:boolean;showPopulation:boolean;showStatus:boolean;brandText:string;brandTagline:string;feedHint:string;catchHint:string;legendCaption:string;hudFont:string;sparkles:boolean;rippleStrength:number;feedBoost:number};
+export const FONT_FAMILIES:Record<string,string>;
+export const DEFAULT_DESIGN:Design;
+export function defaultTextLayers():TextLayers;
+export function validateDesign(value:unknown):Design;
+export function validateTextLayers(value:unknown):TextLayers;
