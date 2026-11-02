@@ -54,7 +54,7 @@ OpenAI Codex, Twitch EventSub, Twitch API, TypeScript, JavaScript, Node.js, HTML
 
 ## Links to fill before submitting
 
-- Code repository: paste the final GitHub/GitLab/Bitbucket URL.
+- Code repository: https://github.com/dasillyneko/little-tide
 - YouTube demonstration: paste the Public video URL.
 - Codex session ID: copy the actual session ID from the main build thread's `/status`.
 - Website/testing: this is an installed local application; point judges to the repository's README. `localhost` is not a public deployment.

@@ -19,7 +19,7 @@ Use OBS's recording controls or a screen recorder to capture the actual Twitch p
 
 ## Next 20 minutes: publish source
 
-Create a public GitHub repository named little-tide (or use GitLab/Bitbucket). Push the prepared source or upload the contents of the clean source package after extracting it. GitHub must show the actual files, not only an uploaded ZIP. Retain README.md, package-lock.json, source, tests and third-party notices. Exclude data/, node_modules/, .git/ and credentials.
+The public judging repository is https://github.com/dasillyneko/little-tide. Open it and verify that README.md, source, tests and third-party notices are visible. The clean source ZIP is a backup, not a replacement for the repository URL. Runtime data, node_modules and credentials are excluded.
 
 ## Next 25 minutes: submit
 

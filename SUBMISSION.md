@@ -35,10 +35,10 @@ Do not replace live Twitch footage with synthetic integration tests or the offli
 
 ## Remaining before submission
 
-- [ ] Register/use a Public Twitch application and authorize the broadcaster.
+- [x] Public Twitch application configured and broadcaster authorization restored for sillyneko60.
 - [ ] Verify `!feed` and `!catch` through the real Twitch channel and OBS.
 - [ ] Record the under-three-minute video and make it viewable on YouTube.
-- [ ] Provide a GitHub/GitLab/Bitbucket repository URL containing source, assets, notices, lockfile and setup instructions. If private, grant judges the access specified by Devpost.
+- [x] Public source repository: https://github.com/dasillyneko/little-tide (includes setup instructions and third-party notices).
 - [ ] Replace this draft with the entrant's final description and actual testing results.
 - [ ] Get the Codex session ID from the main build thread's `/status`; do not substitute the T3 conversation ID.
 - [ ] Add team members, complete the Devpost form, and click Submit. A saved draft is not submitted.
